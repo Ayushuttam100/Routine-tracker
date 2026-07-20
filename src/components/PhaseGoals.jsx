@@ -26,6 +26,7 @@ export default function PhaseGoals() {
   const handleEditClick = (phase) => {
     setEditForm({
       phaseName: phase.phaseName,
+      description: phase.description || '',
       targetDate: new Date(phase.targetDate).toISOString().split('T')[0],
       totalMilestones: phase.totalMilestones
     });
@@ -33,22 +34,35 @@ export default function PhaseGoals() {
   };
 
   const handleSaveEdit = async (id) => {
-    const newDeadlines = deadlines.map(p => 
-      p._id === id ? { ...p, phaseName: editForm.phaseName, targetDate: editForm.targetDate, totalMilestones: editForm.totalMilestones } : p
-    );
-    
-    setDeadlines(newDeadlines);
-    setEditingId(null);
-    
     try {
-      await fetch('/api/deadlines', {
+      const res = await fetch('/api/deadlines', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newDeadlines)
+        body: JSON.stringify({ 
+          id, 
+          phaseName: editForm.phaseName, 
+          description: editForm.description, 
+          targetDate: editForm.targetDate, 
+          totalMilestones: editForm.totalMilestones 
+        })
       });
+      
+      if (res.ok) {
+        const { data } = await res.json();
+        const newDeadlines = deadlines.map(p => p._id === id ? data : p);
+        setDeadlines(newDeadlines);
+        setEditingId(null);
+      } else {
+        throw new Error('Failed to save');
+      }
     } catch (e) {
+      console.error(e);
       fetchDeadlines();
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
   };
 
   if (loading) {
@@ -86,6 +100,13 @@ export default function PhaseGoals() {
                       className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-emerald-500"
                       placeholder="Phase Name"
                     />
+                    <textarea 
+                      rows={2}
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-emerald-500 resize-none"
+                      placeholder="Description"
+                    />
                     <div className="flex gap-2">
                       <input 
                         type="date" 
@@ -98,7 +119,8 @@ export default function PhaseGoals() {
                 ) : (
                   <div className="flex-1 overflow-hidden">
                     <h3 className="font-bold text-zinc-200 text-sm truncate">{phase.phaseName}</h3>
-                    <div className="text-xs text-zinc-500 mt-1">
+                    {phase.description && <p className="text-zinc-400 text-xs mt-1 leading-snug truncate">{phase.description}</p>}
+                    <div className="text-xs text-zinc-500 mt-2">
                       Target: {targetDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                   </div>
@@ -114,9 +136,14 @@ export default function PhaseGoals() {
 
                   <div className={`flex items-center gap-1 transition-opacity ${editingId === phase._id ? 'opacity-100 mt-2' : 'opacity-0 group-hover:opacity-100'}`}>
                     {editingId === phase._id ? (
-                      <button onClick={() => handleSaveEdit(phase._id)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/20 rounded-lg">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                      </button>
+                      <>
+                        <button onClick={() => handleSaveEdit(phase._id)} className="p-1.5 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        </button>
+                        <button onClick={handleCancelEdit} className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors mt-1">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </>
                     ) : (
                       <button onClick={() => handleEditClick(phase)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>

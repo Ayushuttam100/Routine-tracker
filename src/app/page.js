@@ -2,6 +2,7 @@ import DailyBlueprint from "@/components/DailyBlueprint";
 import PhaseGoals from "@/components/PhaseGoals";
 import DailyTasks from "@/components/DailyTasks";
 import ConsistencyChart from "@/components/ConsistencyChart";
+import DailyChecklist from "@/components/DailyChecklist";
 
 export default function Home() {
   return (
@@ -23,6 +24,11 @@ export default function Home() {
         <div className="h-[500px] lg:h-[700px]">
           <DailyTasks />
         </div>
+      </div>
+      
+      {/* Full Width Row for Checklist & Heatmaps */}
+      <div className="w-full pb-20 lg:pb-0">
+        <DailyChecklist />
       </div>
       
     </div>

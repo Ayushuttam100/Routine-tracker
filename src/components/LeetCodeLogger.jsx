@@ -8,6 +8,11 @@ export default function LeetCodeLogger() {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   
+  // Sync States
+  const [username, setUsername] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [showSyncInput, setShowSyncInput] = useState(false);
+
   const [formData, setFormData] = useState({
     problemId: '',
     title: '',
@@ -31,11 +36,52 @@ export default function LeetCodeLogger() {
 
   useEffect(() => {
     fetchLogs();
+    const savedUsername = localStorage.getItem('leetcode_username');
+    if (savedUsername) {
+      setUsername(savedUsername);
+    }
   }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleSync = async (e) => {
+    if (e) e.preventDefault();
+    if (!username.trim()) {
+      setShowSyncInput(true);
+      return;
+    }
+    
+    // Save to local storage
+    localStorage.setItem('leetcode_username', username.trim());
+    setSyncing(true);
+    setShowSyncInput(false);
+
+    try {
+      const res = await fetch('/api/leetcode/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim() })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Failed to sync');
+      
+      if (data.newCount > 0) {
+        showToast(`Successfully imported ${data.newCount} new problems!`);
+        fetchLogs();
+      } else {
+        showToast('You are already up to date!', 'success');
+      }
+      
+    } catch (error) {
+      showToast(error.message, 'error');
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -79,14 +125,52 @@ export default function LeetCodeLogger() {
         </div>
       )}
 
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
-          LeetCode <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Logger</span>
-        </h1>
-        <p className="text-zinc-400 text-lg max-w-2xl">
-          Document your DSA journey. Log problems, track patterns, and store optimal approaches.
-        </p>
+      {/* Header and Sync */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
+            LeetCode <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Logger</span>
+          </h1>
+          <p className="text-zinc-400 text-lg max-w-2xl">
+            Document your DSA journey. Log problems, track patterns, and store optimal approaches.
+          </p>
+        </div>
+        
+        <div className="shrink-0 flex items-center gap-3 relative">
+          {showSyncInput && (
+            <form onSubmit={handleSync} className="absolute right-0 top-full mt-2 w-64 bg-[#111] border border-zinc-700/80 rounded-xl p-3 shadow-2xl z-20 animate-in fade-in slide-in-from-top-2">
+              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">LeetCode Username</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  autoFocus
+                  required
+                  placeholder="e.g. ayush_uttam" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-[#050505] border border-zinc-700/50 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500/50"
+                />
+                <button type="submit" className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">
+                  Save
+                </button>
+              </div>
+            </form>
+          )}
+          <button 
+            onClick={() => username ? handleSync() : setShowSyncInput(!showSyncInput)}
+            disabled={syncing}
+            className="flex items-center gap-2 bg-[#111] hover:bg-zinc-800 text-zinc-300 hover:text-white px-5 py-2.5 rounded-xl border border-zinc-700/60 transition-all shadow-sm font-medium disabled:opacity-50"
+          >
+            {syncing ? (
+              <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            )}
+            {syncing ? 'Syncing...' : 'Sync LeetCode'}
+          </button>
+        </div>
       </div>
 
       {/* Form */}

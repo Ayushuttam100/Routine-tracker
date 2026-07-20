@@ -16,6 +16,7 @@ const PhaseDeadlineSchema = new mongoose.Schema({
   targetDate: { type: Date, required: true },
   milestonesCompleted: { type: Number, default: 0 },
   totalMilestones: { type: Number, required: true },
+  description: { type: String, required: false },
 });
 
 const PhaseDeadline = mongoose.models.PhaseDeadline || mongoose.model('PhaseDeadline', PhaseDeadlineSchema);
@@ -36,18 +37,21 @@ async function seed() {
         targetDate: new Date(new Date().setMonth(now.getMonth() + 2)),
         milestonesCompleted: 0,
         totalMilestones: 5,
+        description: 'React, Node.js, and DBMS foundations.',
       },
       {
         phaseName: 'Phase 2: Advanced Concepts',
         targetDate: new Date(new Date().setMonth(now.getMonth() + 4)),
         milestonesCompleted: 0,
         totalMilestones: 8,
+        description: 'Advanced Next.js, authentication, and core subjects (OS/Networking).',
       },
       {
         phaseName: 'Phase 3: Mastery & Interviews',
         targetDate: new Date(new Date().setMonth(now.getMonth() + 6)),
         milestonesCompleted: 0,
         totalMilestones: 10,
+        description: 'System design and intensive AKTU exam preparation.',
       }
     ];
 

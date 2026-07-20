@@ -17,6 +17,10 @@ const PhaseDeadlineSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  description: {
+    type: String,
+    required: false,
+  },
 });
 
 export default mongoose.models.PhaseDeadline || mongoose.model('PhaseDeadline', PhaseDeadlineSchema);
