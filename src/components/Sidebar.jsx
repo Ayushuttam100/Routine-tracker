@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import { SignInButton, SignUpButton, Show, UserButton } from '@clerk/nextjs';
 
 export default function Sidebar() {
   return (
@@ -38,16 +39,25 @@ export default function Sidebar() {
       </div>
       
       <div className="mt-auto p-4 border-t border-zinc-800/50">
-        <div className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-zinc-800/50 transition-colors cursor-pointer border border-transparent hover:border-zinc-700/50 group">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-lg">
-            <div className="w-full h-full bg-[#111] rounded-full border border-black flex items-center justify-center text-emerald-400 font-bold">
-              AU
+        <div className="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors cursor-pointer border border-transparent group">
+          <Show when="signed-out">
+            <div className="flex flex-col gap-2 w-full">
+              <SignInButton mode="modal">
+                <button className="w-full py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-sm font-semibold transition-colors">Sign In</button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="w-full py-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 rounded-lg text-sm font-semibold transition-colors">Sign Up</button>
+              </SignUpButton>
             </div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">Ayush Uttam</span>
-            <span className="text-xs text-zinc-500">Premium User</span>
-          </div>
+          </Show>
+          <Show when="signed-in">
+            <div className="flex items-center gap-3 w-full">
+              <UserButton appearance={{ elements: { userButtonAvatarBox: "w-10 h-10" } }} />
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">My Profile</span>
+              </div>
+            </div>
+          </Show>
         </div>
       </div>
     </aside>
